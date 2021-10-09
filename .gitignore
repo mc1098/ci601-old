@@ -1,3 +1,7 @@
+## Rust
+**/target
+Cargo.lock
+
 ## Core latex/pdflatex auxiliary files:
 *.aux
 *.lof
