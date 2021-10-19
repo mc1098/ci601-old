@@ -1,0 +1,141 @@
+\documentclass[12pt, a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{bookmark}
+
+\usepackage[
+  backend=bibtex,
+  sortcites=true,
+  sorting=none,
+  abbreviate=false,
+  isbn=false,
+  url=false,
+  style=authoryear,
+  doi=false]{biblatex}
+\appto{\bibsetup}{\raggedright}
+\addbibresource{bibliography.bib}
+
+\usepackage{graphicx}
+\graphicspath { {images/} }
+
+\title{A Rusty RFC Compliant HTTP Server}
+\author{Max Cripps}
+\date{\today}
+
+
+\begin{document}
+
+\maketitle 
+
+\section{Aims and Objectives}
+
+I plan to create an RFC compliant HTTP application server, this will be in the form of a library that
+users will use in order to create an executable HTTP server. This will require research into multiple
+RFCs to know what is and is not compliant behaviour. The final project won't be
+\emph{"fully featured"} as implementing all features would not be possible in the time frame,
+but all features implemented and available to users should be compliant to their respective RFC.
+
+\section{Requirements}
+
+\section{Deliverables}
+
+\section{Choosen Approach}
+
+\section{Plan}
+
+\section{Research}
+
+Creating a RFC compliant HTTP server requires reading the associated RFCs. The relevant RFCs are listed
+below:
+\begin{itemize}
+    \item \ref{sec:rfc7230} RFC7230 "Message Syntax and Routing"
+    \item RFC7231 "Semantics and Content"
+    \item RFC7232 "Conditional Requests"
+    \item RFC7233 "Range Requests"
+    \item RFC7234 "Caching"
+    \item RFC7235 "Authentication"
+\end{itemize}
+
+In order to understand some of the requirement and syntax notation, I also needed to read through
+RFC2119 (\cite{rfc2119}) and RFC5234 (\cite{rfc5234}).
+
+\subsection{RFC 7230}
+\label{sec:rfc7230}
+
+The RFC7230 (\cite{rfc7230}) provides an overview of the HTTP architecture, and defines the "http"
+and "https" Uniform Resource Identifier (URI) schemas. It also defines the message syntax and parsing
+requirements.
+
+An HTTP "server" is a program that accepts connections in order to service HTTP requests by sending
+HTTP responses.
+
+Client and server only refer to roles but may be the same application. The term "user agent" refers
+to any of the various client programs that initiate a request.
+
+HTTP relies upon the Uniform Resource Indentifier (URI) standard RFC3986 (\cite{rfc3986}) to indicate
+target resources and relationship between these resources.
+
+Request response model, where the client sends a HTTP request to the server and the message begins
+with a request-line that and includes a method, URI, and protocol version, followed by header fields.
+The header fields contain request modifiers, client information and metadata.
+
+An empty line indicates the end of the header section.
+
+Message body containing the payload body (if any).
+
+Server responds to a client's request by sending one or more HTTP response messages, each begin with
+a status line that includes the protocol version, a success or error code, and a textual reason
+phrase. This is possibly followed by header fields containing server information, resource metadata
+and again an empty line indicates the end of the header section. Message body containing the payload
+body (if any).
+
+A connection might be used for multiple request/response exchanges.
+
+User agents are just browsers but also includes household appliances, stereos, scales, firmware
+update scripts, command-line programs, mobile apps, and communication devices.
+
+Common servers include home automation units, configurable networking components, office machines,
+autonomous robots, news feeds, traffic cameras, ad selectors, and video-delivery platforms.
+
+2.3 Intermediaries
+
+Three common forms of intermediary: proxy, gateway, and tunnel.
+
+"upstream" and "downstream" are used to describe directional requirements in relation to the
+message flow. All messages flow upstream to downstream. The terms "inbound" and "outbound" are
+used to describe directional requirements in relation to the request route: "inbound" means
+towards the origin server and "outbound" means toward the user agent.
+
+"proxy" is for message-fowarding agent.
+"gateway" (a.k.a "reverse proxy") acts as an origin server for the outbound connection and
+forwards them inbound to another server or servers.
+
+"tunnel" acts as a blind relay between two connections without changing the messages.
+Once active, a tunnel is not considered a party to the HTTP communication.
+
+HTTP is a stateless protocol, meaning that each request message can be understood in isolation.
+A server MUST NOT assume that two requests on the same connection are from the same user
+agent unless the connection is secured and specific to that agent.
+
+2.4 Caches
+
+RFC7234.
+
+2.5 Conformance and Error Handling
+
+
+\subsection{Review of other Rust HTTP Servers}
+
+\subsubsection{Actix}
+
+% Fig for images - use this as an example.
+% \begin{figure}[h]
+%     \centering
+%     \includegraphics[width=0.25\textwidth]{calculator}
+%     \caption{a nice plot}
+%     \label{fig:mesh1}
+% \end{figure}
+    
+\printbibliography
+
+\end{document}
