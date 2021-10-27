@@ -81,45 +81,37 @@ impl Uri {
         };
 
         match rest {
-            [b'?'] | [b'#'] | [] => {
-                return Ok(Self {
-                    scheme,
-                    authority,
-                    path,
-                    query: Query::default(),
-                    fragment: Fragment::default(),
-                })
-            }
+            [b'?'] | [b'#'] | [] => Ok(Self {
+                scheme,
+                authority,
+                path,
+                query: Query::default(),
+                fragment: Fragment::default(),
+            }),
             [b'?', rest @ ..] => match split_at_next(rest, b'#') {
-                Some((_, [])) | None => {
-                    return Ok(Self {
-                        scheme,
-                        authority,
-                        path,
-                        query: Query::from_bytes(rest)?,
-                        fragment: Fragment::default(),
-                    })
-                }
-                Some((query, fragment)) => {
-                    return Ok(Self {
-                        scheme,
-                        authority,
-                        path,
-                        query: Query::from_bytes(query)?,
-                        fragment: Fragment::from_bytes(fragment)?,
-                    })
-                }
-            },
-            [b'#', rest @ ..] => {
-                return Ok(Self {
+                Some((_, [])) | None => Ok(Self {
                     scheme,
                     authority,
                     path,
-                    query: Query::default(),
-                    fragment: Fragment::from_bytes(rest)?,
-                })
-            }
-            _ => return Err(StatusCode::BAD_REQUEST),
+                    query: Query::from_bytes(rest)?,
+                    fragment: Fragment::default(),
+                }),
+                Some((query, fragment)) => Ok(Self {
+                    scheme,
+                    authority,
+                    path,
+                    query: Query::from_bytes(query)?,
+                    fragment: Fragment::from_bytes(fragment)?,
+                }),
+            },
+            [b'#', rest @ ..] => Ok(Self {
+                scheme,
+                authority,
+                path,
+                query: Query::default(),
+                fragment: Fragment::from_bytes(rest)?,
+            }),
+            _ => Err(StatusCode::BAD_REQUEST),
         }
     }
 }
