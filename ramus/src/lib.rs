@@ -2,7 +2,10 @@ use std::io;
 use std::net::{IpAddr, SocketAddr, TcpListener, ToSocketAddrs};
 use std::str::FromStr;
 
+pub mod http;
+
 pub struct Server {
+    #[allow(dead_code)]
     listener: TcpListener,
 }
 
@@ -19,9 +22,4 @@ impl Server {
             Err(err) => Err(io::Error::new(io::ErrorKind::Other, err)),
         }
     }
-}
-
-#[test]
-fn test() {
-    Server::bind_to_default_port("127.0.0.1").unwrap();
 }
