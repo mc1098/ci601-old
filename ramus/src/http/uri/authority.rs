@@ -130,27 +130,27 @@ impl Host {
             // IP-literal
             [b'[', b'v', ..] => {
                 let ipv_raw = ipv_future_from_bytes(src)?;
-                return Ok(Host::IpvFuture(ipv_raw));
+                Ok(Host::IpvFuture(ipv_raw))
             }
             [b'[', rest @ .., b']'] => {
                 let s = String::from_utf8_lossy(rest);
                 if let Ok(addr) = Ipv6Addr::from_str(&s) {
-                    return Ok(Host::IpvN(addr.into()));
+                    Ok(Host::IpvN(addr.into()))
                 } else {
-                    return Err(StatusCode::BAD_REQUEST);
+                    Err(StatusCode::BAD_REQUEST)
                 }
             }
             // IPv4address first then fall back on reg-name
             _ => {
                 let c = String::from_utf8_lossy(src);
                 if let Ok(addr) = Ipv4Addr::from_str(&c) {
-                    return Ok(Host::IpvN(addr.into()));
+                    Ok(Host::IpvN(addr.into()))
                 } else {
                     // fall back to reg-name
-                    return reg_name(src)
+                    reg_name(src)
                         .filter(|s| s.len() == src.len())
                         .ok_or(StatusCode::BAD_REQUEST)
-                        .map(Host::RegName);
+                        .map(Host::RegName)
                 }
             }
         }

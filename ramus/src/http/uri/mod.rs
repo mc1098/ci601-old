@@ -56,7 +56,7 @@ impl Uri {
         };
 
         let (authority, rest) = if let [b'/', b'/', rest @ ..] = rest {
-            match rest.iter().position(|b| b"/?#".contains(&b)) {
+            match rest.iter().position(|b| b"/?#".contains(b)) {
                 Some(i) => {
                     let authority = Authority::from_bytes(&rest[..i])?;
                     (Some(authority), &rest[i..])
@@ -67,7 +67,7 @@ impl Uri {
             (None, rest)
         };
 
-        let (path, rest) = match rest.iter().position(|b| b"?#".contains(&b)) {
+        let (path, rest) = match rest.iter().position(|b| b"?#".contains(b)) {
             Some(i) => (Path::from_bytes(&rest[..i])?, &rest[i..]),
             None => {
                 return Ok(Self {
@@ -81,45 +81,37 @@ impl Uri {
         };
 
         match rest {
-            [b'?'] | [b'#'] | [] => {
-                return Ok(Self {
-                    scheme,
-                    authority,
-                    path,
-                    query: Query::default(),
-                    fragment: Fragment::default(),
-                })
-            }
+            [b'?'] | [b'#'] | [] => Ok(Self {
+                scheme,
+                authority,
+                path,
+                query: Query::default(),
+                fragment: Fragment::default(),
+            }),
             [b'?', rest @ ..] => match split_at_next(rest, b'#') {
-                Some((_, [])) | None => {
-                    return Ok(Self {
-                        scheme,
-                        authority,
-                        path,
-                        query: Query::from_bytes(rest)?,
-                        fragment: Fragment::default(),
-                    })
-                }
-                Some((query, fragment)) => {
-                    return Ok(Self {
-                        scheme,
-                        authority,
-                        path,
-                        query: Query::from_bytes(query)?,
-                        fragment: Fragment::from_bytes(fragment)?,
-                    })
-                }
-            },
-            [b'#', rest @ ..] => {
-                return Ok(Self {
+                Some((_, [])) | None => Ok(Self {
                     scheme,
                     authority,
                     path,
-                    query: Query::default(),
-                    fragment: Fragment::from_bytes(rest)?,
-                })
-            }
-            _ => return Err(StatusCode::BAD_REQUEST),
+                    query: Query::from_bytes(rest)?,
+                    fragment: Fragment::default(),
+                }),
+                Some((query, fragment)) => Ok(Self {
+                    scheme,
+                    authority,
+                    path,
+                    query: Query::from_bytes(query)?,
+                    fragment: Fragment::from_bytes(fragment)?,
+                }),
+            },
+            [b'#', rest @ ..] => Ok(Self {
+                scheme,
+                authority,
+                path,
+                query: Query::default(),
+                fragment: Fragment::from_bytes(rest)?,
+            }),
+            _ => Err(StatusCode::BAD_REQUEST),
         }
     }
 }
@@ -143,6 +135,27 @@ impl Fragment {
             .ok_or(StatusCode::BAD_REQUEST)
     }
 
+    /// Return true if the Fragment is empty (has no value).
+    ///
+    /// ```
+    /// use ramus::http::Fragment;
+    ///
+    /// let fragment = Fragment::default();
+    /// assert!(fragment.is_empty());
+    /// ```
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    /// Returns the number of chars in the Fragment.
+    ///
+    /// ```
+    /// use ramus::http::Fragment;
+    ///
+    /// let fragment = Fragment::from_bytes(b"Hello")
+    ///     .expect("valid fragment bytes");
+    /// assert_eq!(5, fragment.len());
+    /// ```
     pub fn len(&self) -> usize {
         self.0.len()
     }
