@@ -56,7 +56,7 @@ impl Uri {
         };
 
         let (authority, rest) = if let [b'/', b'/', rest @ ..] = rest {
-            match rest.iter().position(|b| b"/?#".contains(&b)) {
+            match rest.iter().position(|b| b"/?#".contains(b)) {
                 Some(i) => {
                     let authority = Authority::from_bytes(&rest[..i])?;
                     (Some(authority), &rest[i..])
@@ -67,7 +67,7 @@ impl Uri {
             (None, rest)
         };
 
-        let (path, rest) = match rest.iter().position(|b| b"?#".contains(&b)) {
+        let (path, rest) = match rest.iter().position(|b| b"?#".contains(b)) {
             Some(i) => (Path::from_bytes(&rest[..i])?, &rest[i..]),
             None => {
                 return Ok(Self {
