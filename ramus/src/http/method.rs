@@ -5,27 +5,27 @@ use super::StatusCode;
 /// Request methods as defined in [RFC7231 Section
 /// 4](https://datatracker.ietf.org/doc/html/rfc7231#section-4)
 pub enum Method {
-    GET,
-    HEAD,
-    POST,
-    PUT,
-    DELETE,
-    CONNECT,
-    OPTIONS,
-    TRACE,
+    Get,
+    Head,
+    Post,
+    Put,
+    Delete,
+    Connect,
+    Options,
+    Trace,
 }
 
 impl Method {
     pub fn from_bytes(src: &[u8]) -> Result<Self, StatusCode> {
         let method = match src {
-            b"GET" => Method::GET,
-            b"HEAD" => Method::HEAD,
-            b"POST" => Method::POST,
-            b"PUT" => Method::PUT,
-            b"DELETE" => Method::DELETE,
-            b"CONNECT" => Method::CONNECT,
-            b"OPTIONS" => Method::OPTIONS,
-            b"TRACE" => Method::TRACE,
+            b"GET" => Method::Get,
+            b"HEAD" => Method::Head,
+            b"POST" => Method::Post,
+            b"PUT" => Method::Put,
+            b"DELETE" => Method::Delete,
+            b"CONNECT" => Method::Connect,
+            b"OPTIONS" => Method::Options,
+            b"TRACE" => Method::Trace,
             _ => return Err(StatusCode::NOT_IMPLEMENTED),
         };
         Ok(method)
