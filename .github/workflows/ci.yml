@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: 
+      - staging
+      - trying
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+        components: clippy, rustfmt
+    - name: Check formatting
+      working-directory: ./ramus
+      run: cargo fmt -- --check
+    - name: Check with Clippy
+      working-directory: ./ramus
+      run: cargo clippy -- -D warnings
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+        components: clippy, rustfmt
+    - name: Unit tests
+      working-directory: ./ramus
+      run: cargo test --all
