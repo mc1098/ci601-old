@@ -28,9 +28,9 @@ where
     let mut s = String::with_capacity(src.len());
     for b in src {
         match *b {
-            b'!'        | 
+            b'!'        |
             b'$'..=b',' | // '$', '&', ''', '(', ')', '*', '+', ','
-            b';'        | 
+            b';'        |
             b'=' => {
                 s.push(*b as char);
             }
@@ -39,8 +39,8 @@ where
             }
             _ => return None,
         }
-   }
-   Some(s)
+    }
+    Some(s)
 }
 
 #[inline]
@@ -59,7 +59,6 @@ pub(crate) const fn parse_hex_dig(byte: u8) -> Option<u8> {
     Some(digit)
 }
 
-
 /// Checks that the sequence of octets is a valid reg-name as defined in
 /// [RFC3986 Section 3.2.2](https://datatracker.ietf.org/doc/html/rfc3986#section-3.2.2)
 ///
@@ -74,9 +73,9 @@ pub(crate) fn reg_name(src: &[u8]) -> Option<String> {
     reg_name_ext(src, |_| false)
 }
 
-pub(crate) fn reg_name_ext_until<F>(src: &[u8], predicate: F, until: u8) -> Option<String> 
-where 
-    F: Fn(u8) -> bool 
+pub(crate) fn reg_name_ext_until<F>(src: &[u8], predicate: F, until: u8) -> Option<String>
+where
+    F: Fn(u8) -> bool,
 {
     let mut reg_name = String::new();
 
@@ -95,9 +94,9 @@ where
                     }
                     i += 1;
                 }
-                b'!'        | 
+                b'!'        |
                 b'$'..=b',' | // '$', '&', ''', '(', ')', '*', '+', ','
-                b';'        | 
+                b';'        |
                 b'=' => {
                     reg_name.push(byte as char);
                     i += 1;
@@ -138,9 +137,9 @@ where
                     }
                     i += 1;
                 }
-                b'!'        | 
+                b'!'        |
                 b'$'..=b',' | // '$', '&', ''', '(', ')', '*', '+', ','
-                b';'        | 
+                b';'        |
                 b'=' => {
                     reg_name.push(byte as char);
                     i += 1;
@@ -207,5 +206,4 @@ mod tests {
     fn no_space_to_split_on_returns_none() {
         assert!(split_at_next_space(b"baaaaaaaaaaaaaaaaa").is_none());
     }
-
 }
