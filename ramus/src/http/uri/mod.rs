@@ -135,6 +135,27 @@ impl Fragment {
             .ok_or(StatusCode::BAD_REQUEST)
     }
 
+    /// Return true if the Fragment is empty (has no value).
+    ///
+    /// ```
+    /// use ramus::http::Fragment;
+    ///
+    /// let fragment = Fragment::default();
+    /// assert!(fragment.is_empty());
+    /// ```
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+
+    /// Returns the number of chars in the Fragment.
+    ///
+    /// ```
+    /// use ramus::http::Fragment;
+    ///
+    /// let fragment = Fragment::from_bytes(b"Hello")
+    ///     .expect("valid fragment bytes");
+    /// assert_eq!(5, fragment.len());
+    /// ```
     pub fn len(&self) -> usize {
         self.0.len()
     }
