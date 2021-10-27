@@ -2,6 +2,8 @@ use super::StatusCode;
 
 #[derive(Copy, Clone, Debug, Hash, PartialEq)]
 #[non_exhaustive]
+/// Request methods as defined in [RFC7231 Section
+/// 4](https://datatracker.ietf.org/doc/html/rfc7231#section-4)
 pub enum Method {
     GET,
     HEAD,
