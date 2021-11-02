@@ -2,6 +2,14 @@
 
 \usepackage[utf8]{inputenc}
 \usepackage{bookmark}
+\usepackage{nameref}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=black,
+  citecolor=black,
+  urlcolor=blue,
+}
 
 \usepackage[
   backend=bibtex,
@@ -12,13 +20,14 @@
   url=false,
   style=authoryear,
   doi=false]{biblatex}
+% raggedright to fix bibliography url hbox overflow
 \appto{\bibsetup}{\raggedright}
 \addbibresource{bibliography.bib}
 
 \usepackage{graphicx}
 \graphicspath { {images/} }
 
-\title{A Rusty RFC Compliant HTTP Server}
+\title{A Rusty HTTP Server Library}
 \author{Max Cripps}
 \date{\today}
 
@@ -29,28 +38,253 @@
 
 \section{Aims and Objectives}
 
-I plan to create an RFC compliant HTTP application server, this will be in the form of a library that
-users will use in order to create an executable HTTP server. This will require research into multiple
-RFCs to know what is and is not compliant behaviour. The final project won't be
-\emph{"fully featured"} as implementing all features would not be possible in the time frame,
-but all features implemented and available to users should be compliant to their respective RFC.
+In order to develop this project I will need to investigate several RFCs that define the standards
+for an HTTP 1.1 server. As most HTTP servers are multithreaded, I will also need to investigate multithreaded
+implementations that I can use when using Rust. 
 
-\section{Requirements}
+The aim of this project is to develop a Rust library that can be used to create an RFC compliant
+HTTP application server. The library will contain modular public interfaces so that users of the
+library can build an HTTP server with different semantics then is provided. This library will also
+have a high level interface for creating an HTTP server application that requires minimal code. I will
+be creating multiple example projects to demonstrate using the library and to prove it works as intended,
+see \emph{\nameref{sec:deliverables}} for more.
 
-\section{Deliverables}
+The library will not be \emph{"fully featured"} as providing this in the time frame would not be
+possible. A library of this nature to be production ready would require more time and to be candid
+more expertise in the area of security in order to make a viable solution that could rival what is
+available in Rust.
 
-\section{Choosen Approach}
+\section{Requirements} \label{sec:requirements}
 
-\section{Plan}
+Most of the requirements are derived from RFCs that define the HTTP 1.1 protocol and RFCs in which
+those depend on. The main RFCs that define the HTTP 1.1 protocol are as follows:
+\begin{itemize}
+  \item RFC7230 \emph{Message Syntax and Routing}
+  \item RFC7231 \emph{Semantics and Content}
+  \item RFC7232 \emph{Conditional Requests}
+  \item RFC7233 \emph{Range Requests}
+  \item RFC7234 \emph{Caching}
+  \item RFC7235 \emph{Authentication}
+\end{itemize}
 
-\section{Research}
+All the RFCs listed above follow the requirement notation as defined in RFC2119 (\cite{rfc2119}),
+this RFC defines keywords and how they should be interpreted in order to be RFC compliant.
+
+The requirements are grouped under subsections using the MoSCoW prioritization (\cite{moscow}) method.
+
+\subsection{Must Requirements}
+\begin{itemize}
+    \item\label{mreq:rfc-compliance} RFC compliance
+    \item\label{mreq:memory-and-panic-safety} Memory and panic safety
+    \item\label{mreq:public-interface-documentation} Public interface documentation
+    \item\label{mreq:request-parsing} Request parsing
+    \item\label{mreq:configurable-request-validation} Configurable request validation
+    \item\label{mreq:status-code-based-errors} Status code based error handling
+    \item\label{mreq:response-built-from-request} Response built from request
+    \item\label{mreq:response-serialization} Response serialization
+    \item\label{mreq:tcp-communication} TCP communication
+    \item\label{mreq:example-echo-server} Echo server (example deliverable)
+    \item\label{sreq:example-file-server} File server (example deliverable)
+\end{itemize}
+
+One of the major over arching requirement is to make sure that this implementation is memory and panic safe, which
+means that, as the server is running that it is not leaking memory due to the library implementation
+and cannot access invalid memory addresses. Panic safety is a further guarentee that the implementation
+will uphold memory safety even when panics occur. Rust allows for more fine-grained control over
+memory management which comes with dangers and benefits, see more in
+\emph{\nameref{sec:choosen-approach}}.
+
+I think a library requires good documentation in order to be usable by others, so this became a must
+requirement for this project - it benefits me while implementing too as the design is modular, so I
+will likely be using my own documentation.
+
+RFC7230 (\cite{rfc7230}) contains the majority of the syntax for the request and response messages
+in the HTTP protocol. The syntax notation used in this RFC is the Augmented Backus-Naur Form (ABNF)
+notation of RFC5234 (\cite{rfc5234}). Much of the HTTP standard is based around the message syntax
+defined in this RFC, therefore parsing and forming messages is a large part of the implementation.
+
+The implementation of the transport layer even effects how requests need to be parsed; The URI
+will accept port numbers as the normal transport layer is assumed to be TCP, however, if the
+implementation is not TCP then parsing of URIs need to be more restrictive.
+
+RFC7231 (\cite{rfc7231}) defines the all Status Codes that should be supported by both servers and
+user-agents. The Status Codes is a three-digit number which explains the result of the request made
+by the user-agent. Many of the other RFCs cross-reference this one when stating intended behaviour
+of the server in regard to what status code it should return to a user-agent when a given event
+occurs, such as when trying to pass a URI that is too long for the server then the server should
+return a 414 (URI Too Long). The importance of status codes meant that I wanted to add them as a
+major part of the error handling from beginning which is why it is part of the requirements list.
+
+\subsection{Should Requirements}
+
+\begin{itemize}
+    \item\label{sreq:server-logging} Server logging
+    \item\label{sreq:multithreaded-request-handling} Multithreaded request handling 
+    \item\label{sreq:example-sleep-server} Sleep server (example deliverable)
+    \item\label{sreq:request-routing} Request routing
+    \item\label{mreq:example-list-server} List server (example deliverable)
+\end{itemize}
+
+The URI, adapted from RFC3986 (\cite{rfc3986}), defined in RFC7230 is a major part of defining 
+the resource target which will help when implementing the request routing which will be a process 
+provided by the library so that specific functions can be called to handle the request based on its
+resource target and the method of the request.
+
+\subsection{Could Requirements}
+
+\begin{itemize}
+    \item\label{creq:request-body-deserialization} Request body deserialization
+    \item\label{creq:request-query-deserialization} Request query deserialization
+    \item\label{creq:caching-service} Caching service
+    \item\label{creq:transport-layer-agnostic} Transport layer agnostic
+    \item\label{creq:asynchronous-request-handling} Asynchronous request handling
+    \item\label{creq:conditional-requests} Conditional Requests
+    \item\label{creq:range-requests} Range Requests
+\end{itemize}
+
+RFC7232 (\cite{rfc7232}) and RFC7233 (\cite{rfc7233}) define more semantics and capabilities to the
+request syntax defined in RFC7230. These two RFCs and their semantics are a lower priority due to the
+size and scope of this project, however, the contents of the RFCs were still researched as part of
+the planning and requirements refinement as I want to create the project so that these requirements
+could be added if more time to implement them before the deadline.
+
+RFC7234 (\cite{rfc7234}) defines the standards for caching the response of requests. In this project,
+caching is a lower priority as third party caches are plentiful and can work with RFC compliant
+HTTP messages. The benefit to adding a caching service would be to provide more "out of the box"
+and to improve the performance when handling multiple of the same requests.
+
+\subsection{Won't Requirements}
+
+\begin{itemize}
+    \item\label{wreq:connect-method-support} CONNECT method support
+    \item\label{wreq:http2.0-support} HTTP 2.0 support
+    \item\label{wreq:authentication} Authentication service
+    \item\label{wreq:proxy-or-gateway} Proxy OR Gateway
+\end{itemize}
+
+RFC7230 provides details regarding routing of proxy and gateway implementations that
+won't be used in this project.
+
+RFC7235 (\cite{rfc7235}) is the RFC defining authentication and other security considerations. As
+a developer who is not an expert in application security I felt that Authentication and HTTPS
+requirements were a low priority for this project, however, for a project to be useful in production
+security must be one of the fundamental building blocks especially for an HTTP application. HTTPS and
+authentication would also be more difficult to showcase clearly and correctly as HTTPS would require
+certification and authentication would require some storage as part of the examples.
+
+\section{Deliverables} \label{sec:deliverables}
+
+\begin{itemize}
+    \item Source code 
+    \item Documentation
+    \item GitHub repository (confirmation of CI)
+    \item Server application examples \footnotemark[1]
+      \begin{itemize}
+          \item Echo server 
+          \item Sleep server 
+          \item File server
+          \item List server
+      \end{itemize}
+\end{itemize}
+
+\footnotetext[1]{The examples delivered will depend on the implementation as the examples listed
+demonstrate different features of the library and so if they are not implemented then the example
+will not be part of the deliverables, this also means more examples might be provided if more
+requirements are implemented}
+
+The main deliverable is the source code for the library, which will be provided in a compressed zipped
+folder with the public documentation. The source code would also be available on GitHub as a private
+repository, where access will be granted to my supervisor and second reader - the repository will
+be made public after the deadline so that moderators would have free access to review, if required.
+The GitHub repository is also set up for CI using
+\href{https://docs.github.com/en/actions/learn-github-actions/understanding-github-actions}{\emph{GitHub Actions}}
+which will run all the unit tests and document tests which should help aid moderators that the code
+is working as intended.
+
+\subsection{Examples}
+
+The library itself will be quite a bit of code and would be hard to assert that it works, especially
+if you aren't used to reading Rust code, therefore, I will also be including examples of application
+servers built using the library code so that they can be run and hand tested.
+
+Each example provided as a deliverable will come with a README that explains how to run the example
+and the purpose it is trying to convey. They will also provide a sequence of commands that can be
+used to test the example as a guide.
+
+\subsubsection{Echo Server}
+
+This example will provide a simple proof that the application server can receive a request and then
+provide a response with the same body content. This will help demonstrate that the parsing, TCP
+connection and serialization of the response is working correctly for simple GET requests.
+
+\subsubsection{Sleep Server}
+
+This example will provide two routes; the first which will always take a number of seconds to return
+a request and another that will return a response almost immediately. The reason for this example is
+to help demonstrate that the server can handle multiple requests at the same time without blocking
+the other. The sleeping route will cause a thread blocking action which could be, but not limited to,
+a thread sleep - thread in this context doesn't necessarily denote an OS thread as in an asynchronous
+runner the thread would be a green thread.
+
+\subsubsection{File Server}
+
+The file server example will provide a static path for file lookup which can be requested using a
+GET request. This will demonstrate using the library to query the request model in order to get
+the path for the request file and returning that file as a response.
+
+\subsubsection{List Server}
+
+The list server example will hold an in memory global list which can be updated using the REST
+architectural style (\cite{rest}).
+This will demonstrate request routing specifically for different methods and somewhat simulates how
+a server could be designed to interact with a database. The main purpose is not to address the problems
+of shared mutability of global state in this example, but it could be given enough time to do so as
+this would be a problem that would occur in a real server application.
+
+\section{Choosen Approach} \label{sec:choosen-approach}
+
+The general approach in this project is to use software and tools that promote sharing and
+co-operation, this was not just for the development but also for planning and analysis of the
+planning. I feel this is more akin to the normal procedure in the industry and allows for teams of
+multiple people of different roles to work in an efficient and cohesive manner, also it was important
+for directors to be able to quickly understand who was doing what at any given time.
+
+\subsection{Language and Development Tools}
+
+One of the first choices and ultimately one of the most impactful was, what programming lanugage
+would be best suited to this project. I wanted to assure that the library was memory safe and has
+good consistent performance. Memory safety is important because a server application is often a
+long-running program, so any memory leaks will cause an \emph{out of memory} error. This requirement
+for memory safety made me consider managed languages such as Java or Go, however, with managed memory
+comes the garbage collector and this can add some hiccups in performance as found by Discord (\cite{discord}).
+
+I first learnt to code with C++ so this was a consideration, but I had not used it since smart pointers
+first got introduced, and I have heard many things have changed. I had just started trying out Rust
+after seeing it become the most loved programming language on StackOverflow, and the mix of low level
+control with high level concepts and a sprinkle of functional influence had me convinced that Rust
+would be a great language to use for this project. Rust also has a concept of \emph{Ownership},
+which was inspired in part from Cyclone (\cite{cyclone}), that enables Rust to make memory safety
+guarentees without needing a garbage collector and the best part or this concept is that it is
+completely in the control of the developer and not a runtime.
+
+Rust and the tools it provides were another part of the decision, Rust has a dependency management
+tool called Cargo, but it does more than this it provides a high level command line interface for 
+build, testing, benchmarking and running Rust code with documentation.
+
+Source control is a must for development and I have used and know Git very well and use it mostly
+with the source control hosting site GitHub. In this project I choose to use Git as I only have
+experience with this and Team Foundation Server (TFS), the latter being an unpleasent experience of
+legacy code trapped in a legacy source control system. I have good experience using GitHub and
+find GitHub Actions as an associated CI tool easy to set up and use for projects that don't require
+multiple complex environments. 
+
+\subsection{Planning with Jira}
 
 Jira is an agile project management \emph{Software as a Service} (SaaS). I used Jira in order to
 plan my project. I used Jira over Trello as I wanted to perform my implementation in
-sprints and not use a Kanban-style. I have also use Jira in placement year and I am aware that it 
-is used by a large number of companies, therefore, learning more about Jira in the process of this 
+sprints and not use a Kanban-style. I have also used Jira in placement year, and I am aware that it 
+is used by many large numbers of companies, therefore, learning more about Jira in the process of this 
 project will build up another skill (\cite{jira}).
-
 
 I researched the information provided by Atlassian regarding \emph{Agile project management},
 this includes information on epics, stories, and estimation and how Jira helps. This information
@@ -59,83 +293,25 @@ I used the Scrum approach in Jira as I wanted to implement the work in sprints s
 sprint I could review the work and state of the project with a different perspective
 (\cite{jira-agile-info}). 
 
-Creating a RFC compliant HTTP server requires reading the associated RFCs. The relevant RFCs are listed
-below:
-\begin{itemize}
-    \item \ref{sec:rfc7230} RFC7230 "Message Syntax and Routing"
-    \item RFC7231 "Semantics and Content"
-    \item RFC7232 "Conditional Requests"
-    \item RFC7233 "Range Requests"
-    \item RFC7234 "Caching"
-    \item RFC7235 "Authentication"
-\end{itemize}
+\subsection{Implementation}
 
-In order to understand some of the requirement and syntax notation, I also needed to read through
-RFC2119 (\cite{rfc2119}) and RFC5234 (\cite{rfc5234}).
+I considered many options for how and in what order I'd be implementing this project. I choose
+to implement the request parsing first, this is by far the largest and arguably most important part
+of the implementation in regard of RFC compliance; as defined in RFC7230 HTTP is an interface designed
+through defining the syntax of communication. Then after implementing the request parsing I will then
+work on the shared models that will be used by both the request and response so will include implementing
+deserialization and serialization for requests and responses respectively. Then from this module of
+work I can create the "core" of the library which includes setting up TCP conncections and providing
+configurable contexts that can effect the parsing of requests. 
 
-\subsection{RFC 7230}
-\label{sec:rfc7230}
+A possible other implementation route I considered was to use existing code as dependencies for the
+request and response models allowing me to focus on the "core" of the project which would have afforded
+me more time to create a more feature rich library and focus on performance tuning in a multithreaded
+environment. This was tempting, however, I felt that a big part of the nature of this project is to
+research and implement from an RFC which meant that request parsing was an important part of the
+project to implement myself.
 
-The RFC7230 (\cite{rfc7230}) provides an overview of the HTTP architecture, and defines the "http"
-and "https" Uniform Resource Identifier (URI) schemas. It also defines the message syntax and parsing
-requirements.
-
-An HTTP "server" is a program that accepts connections in order to service HTTP requests by sending
-HTTP responses.
-
-Client and server only refer to roles but may be the same application. The term "user agent" refers
-to any of the various client programs that initiate a request.
-
-HTTP relies upon the Uniform Resource Indentifier (URI) standard RFC3986 \\ (\cite{rfc3986}) to indicate
-target resources and relationship between these resources.
-
-Request response model, where the client sends a HTTP request to the server and the message begins
-with a request-line that and includes a method, URI, and protocol version, followed by header fields.
-The header fields contain request modifiers, client information and metadata.
-
-An empty line indicates the end of the header section.
-
-Message body containing the payload body (if any).
-
-Server responds to a client's request by sending one or more HTTP response messages, each begin with
-a status line that includes the protocol version, a success or error code, and a textual reason
-phrase. This is possibly followed by header fields containing server information, resource metadata
-and again an empty line indicates the end of the header section. Message body containing the payload
-body (if any).
-
-A connection might be used for multiple request/response exchanges.
-
-User agents are just browsers but also includes household appliances, stereos, scales, firmware
-update scripts, command-line programs, mobile apps, and communication devices.
-
-Common servers include home automation units, configurable networking components, office machines,
-autonomous robots, news feeds, traffic cameras, ad selectors, and video-delivery platforms.
-
-2.3 Intermediaries
-
-Three common forms of intermediary: proxy, gateway, and tunnel.
-
-"upstream" and "downstream" are used to describe directional requirements in relation to the
-message flow. All messages flow upstream to downstream. The terms "inbound" and "outbound" are
-used to describe directional requirements in relation to the request route: "inbound" means
-towards the origin server and "outbound" means toward the user agent.
-
-"proxy" is for message-fowarding agent.
-"gateway" (a.k.a "reverse proxy") acts as an origin server for the outbound connection and
-forwards them inbound to another server or servers.
-
-"tunnel" acts as a blind relay between two connections without changing the messages.
-Once active, a tunnel is not considered a party to the HTTP communication.
-
-HTTP is a stateless protocol, meaning that each request message can be understood in isolation.
-A server MUST NOT assume that two requests on the same connection are from the same user
-agent unless the connection is secured and specific to that agent.
-
-2.4 Caches
-
-RFC7234.
-
-2.5 Conformance and Error Handling
+\section{Plan} \label{sec:plan}
 
 
 \subsection{Review of other Rust HTTP Servers}
