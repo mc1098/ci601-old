@@ -34,7 +34,9 @@
 
 \begin{document}
 
-\maketitle 
+\maketitle \newpage
+
+\tableofcontents \newpage
 
 \section{Aims and Objectives}
 
@@ -293,7 +295,7 @@ I used the Scrum approach in Jira as I wanted to implement the work in sprints s
 sprint I could review the work and state of the project with a different perspective
 (\cite{jira-agile-info}). 
 
-\subsection{Implementation}
+\subsection{Implementation} \label{ssec:implementation}
 
 I considered many options for how and in what order I'd be implementing this project. I choose
 to implement the request parsing first, this is by far the largest and arguably most important part
@@ -313,19 +315,47 @@ project to implement myself.
 
 \section{Plan} \label{sec:plan}
 
+I am using Agile and some DevOps for my planning. All of my requirements have been split down into
+a list of user stories within Jira and initially were part of the sprint backlog.
 
-\subsection{Review of other Rust HTTP Servers}
+\subsection{Sprint Planning}
 
-\subsubsection{Actix}
+I will be conducting sprints with a duration of two weeks, the stories used for the sprints are
+based on priority and following the implementation plan as discussed in \nameref{ssec:implementation}
+under the \nameref{sec:choosen-approach} section above. I initially wanted to have sprints of 1 week 
+duration, however, because this project is only a part of my workload a week would not provide enough
+time to complete some user stories that reasonably should be completed in a single sprint. The two
+week duration is also beneficial as this coincides with a meeting with my supervisor so this could
+allow for both of us to review some of the analysis of the completed sprint.
 
-% Fig for images - use this as an example.
-% \begin{figure}[h]
-%     \centering
-%     \includegraphics[width=0.25\textwidth]{calculator}
-%     \caption{a nice plot}
-%     \label{fig:mesh1}
-% \end{figure}
-    
+The number of user stories in each sprint is based on story point estimation, I found this made it
+easier to estimate single user stories. Sprints created from story point accumulation, I felt would
+be easier to adjust after sprint analysis of the burndown charts and velocity report and the number
+of story points for each sprint could be adjusted. The user stories themselves are also easier to
+change and adapt when using story points and I feel that as I work on the project more that I will
+be updating the story points to more accurately represent the complexity of the work.
+
+The user stories are child issues for epics, which are large bodies of work that are delivered over
+a period of multiple sprints, this makes it easier in Jira to group user stories based on their epics
+respectively. The sprints designed are generally working towards completing a specific epic, however,
+due to the scope of the project some of the work in the epic is a lower priority then work in another
+epic and so work on one epic is suspended in order to focus on Must and Should priority stories in 
+other epics. This priority based planning of sprints is an attempt to avoid the scenario where only
+a certain part of the project is complete but cannot demonstrate any functionality because the
+"glue" code hasn't been implemented yet.
+
+Jira provides a roadmap widget [\ref{fig:jira-roadmap}], which is their equivalent to a
+simple Gantt chart. I used this as a replacement for a Gantt chart as it stays in sync with Jira and
+using something like Jira meets my \nameref{sec:choosen-approach} as discussed in the initial
+paragraph of that section.
+
+\begin{figure}
+  \centering 
+  \includegraphics[width=1\textwidth]{project-roadmap.png}
+  \caption{Jira roadmap}
+  \label{fig:jira-roadmap}
+\end{figure}
+
 \newpage
 \printbibliography
 
