@@ -87,6 +87,8 @@ where
 /// that satisfy the predicate given to a String.
 ///
 /// Returns None if the `pct-encoded` value is invalid.
+/// A predicate that accepts the '%' octet will still cause this function to
+/// return None if that '%' is not followed by two valid HEXDIG.
 ///
 /// # Safety
 ///
@@ -107,12 +109,17 @@ where
     // the bit AND reverts pct back to zero on the second parse of
     // HEXDIG.
     let mut pct = 0;
-    let count = src
+    let bytes = src
         .iter()
         .take_while(|b| {
             if pct != 0 {
-                pct = (pct << 1) & 0b11;
-                return is_hex_dig(**b);
+                return if is_hex_dig(**b) {
+                    // only change pct if b is a valid HEXDIG
+                    pct = (pct << 1) & 0b11;
+                    true
+                } else {
+                    false
+                };
             }
 
             if **b == b'%' {
@@ -122,7 +129,8 @@ where
                 predicate(**b)
             }
         })
-        .count();
+        .copied()
+        .collect();
 
     // check that a pct-encoded value was not part way complete when
     // iterator stopped
@@ -130,12 +138,13 @@ where
         return None;
     }
 
-    src.get(0..count).map(|bytes| {
-        // SAFETY:
-        // The bytes slice has been checked for valid ascii characters
-        // and ascii is always valid UTF-8 so this is safe.
-        unsafe { String::from_utf8_unchecked(bytes.to_vec()) }
-    })
+    // SAFETY:
+    // The bytes slice has been checked for valid ascii characters
+    // and ascii is always valid UTF-8 so this is safe.
+    // Note: unsafe block used here to denote the part of the function
+    // that is unsafe
+    #[allow(unused_unsafe)]
+    Some(unsafe { String::from_utf8_unchecked(bytes) })
 }
 
 /// Parse multiple `pchar` from a sequence of bytes to a String.
@@ -205,23 +214,48 @@ pub(crate) const fn parse_hex_dig(byte: u8) -> Option<u8> {
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_hex_dig, parse_reg_name};
+    use super::{parse_hex_dig, parse_pct_encoded_ext, parse_reg_name};
 
     #[test]
-    fn reg_name_with_single_percent_is_not_valid() {
-        assert!(parse_reg_name(b"%").is_none())
+    fn single_percent_is_not_a_valid_pct_encoded() {
+        assert!(unsafe { parse_pct_encoded_ext(b"%", |_| false) }.is_none());
+        assert!(unsafe { parse_pct_encoded_ext(b"%", |b| b == b'%') }.is_none());
     }
 
     #[test]
-    fn reg_name_pct_one_hex_dig_is_not_valid() {
-        assert!(parse_reg_name(b"%1").is_none());
+    fn single_percent_and_hex_dig_is_not_a_valid_pct_encoded() {
+        assert!(unsafe { parse_pct_encoded_ext(b"%1", |_| false) }.is_none());
     }
 
     #[test]
-    fn reg_name_pct_encoded_values() {
-        assert_eq!(Some("%1A".to_owned()), parse_reg_name(b"%1A"));
-        assert_eq!(Some("%1A%F6".to_owned()), parse_reg_name(b"%1A%F6"));
-        assert_eq!(Some("%FF%FF".to_owned()), parse_reg_name(b"%FF%FF"));
+    fn valid_pct_encoded_values() {
+        assert_eq!(Some("%1A".to_owned()), unsafe {
+            parse_pct_encoded_ext(b"%1A", |_| false)
+        });
+        assert_eq!(Some("%1A%F6".to_owned()), unsafe {
+            parse_pct_encoded_ext(b"%1A%F6", |_| false)
+        });
+        assert_eq!(Some("%FF%FF".to_owned()), unsafe {
+            parse_pct_encoded_ext(b"%FF%FF", |_| false)
+        });
+    }
+
+    #[test]
+    fn predicate_with_pct_encoded_does_not_allow_octets_within_pct_encoded_value() {
+        // predicate will allow for octets before or after a valid pct-encoded value
+        // but those pct-encoded values must still be valid and cannot contain octets
+        // even if permitted by the predicate
+        assert_eq!(None, unsafe {
+            parse_pct_encoded_ext(b"%F:F", |b| b == b':')
+        });
+        assert!(unsafe { parse_pct_encoded_ext(b"%F:F", |b| b == b':') }.is_none())
+    }
+
+    #[test]
+    fn predicate_with_pct_encoded_allow_interleaving_octets() {
+        assert_eq!(Some("%B7@%54".to_owned()), unsafe {
+            parse_pct_encoded_ext(b"%B7@%54", |b| b == b'@')
+        });
     }
 
     #[test]
