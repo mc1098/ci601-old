@@ -1,3 +1,4 @@
+/// Crate Module:
 /// Module that contains functions relating to parsing or validating of ABNF syntax types.
 
 /// Checks if the value is a `unreserved` ABNF as defined in
@@ -76,6 +77,8 @@ where
     let count = src.iter().take_while(|b| predicate(**b)).count();
     src.get(..count).map(|bytes| {
         // SAFETY:
+        // assumes that predicate given only allows valid ascii characters which are valid UTF-8
+        // and so satisfies the safety requirements of from_utf8_unchecked.
         unsafe { String::from_utf8_unchecked(bytes.to_vec()) }
     })
 }
