@@ -23,7 +23,7 @@ pub(crate) fn split_at_next_space(src: &[u8]) -> Option<(&[u8], &[u8])> {
 }
 
 #[cfg(test)]
-mod split_at_next_tests {
+mod tests {
     use super::{split_at_next, split_at_next_space};
 
     #[test]
