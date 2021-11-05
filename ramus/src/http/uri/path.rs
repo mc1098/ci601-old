@@ -1,7 +1,4 @@
-use crate::http::{
-    utils::{reg_name_ext, reg_name_ext_until},
-    StatusCode,
-};
+use crate::http::{utils, StatusCode};
 
 /// Path as defined in [RFC3986 Section
 /// 3.3](https://datatracker.ietf.org/doc/html/rfc3986#section-3.3)
@@ -32,7 +29,7 @@ impl Path {
     pub fn from_bytes(src: &[u8]) -> Result<Self, StatusCode> {
         macro_rules! parse_pchars_into {
             ($rest:expr) => {{
-                let segment_nz = reg_name_ext_until($rest, |b| b":@".contains(&b), b'/')
+                let segment_nz = utils::abnf::parse_pchar($rest)
                     .filter(|s| !s.is_empty())
                     .ok_or(StatusCode::BAD_REQUEST)?;
                 let rest = &$rest[segment_nz.len()..];
@@ -68,8 +65,7 @@ impl Path {
         loop {
             match rest {
                 [b'/', next @ ..] => {
-                    let segment = reg_name_ext(next, |b| b":@".contains(&b))
-                        .ok_or(StatusCode::BAD_REQUEST)?;
+                    let segment = utils::abnf::parse_pchar(next).ok_or(StatusCode::BAD_REQUEST)?;
                     if segment.is_empty() {
                         if let Some('/') = path.chars().last() {
                             // multiple forward slashes are folded down
