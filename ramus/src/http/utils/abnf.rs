@@ -74,13 +74,14 @@ pub(crate) unsafe fn parse_seq<P>(src: &[u8], predicate: P) -> Option<String>
 where
     P: Fn(u8) -> bool,
 {
-    let count = src.iter().take_while(|b| predicate(**b)).count();
-    src.get(..count).map(|bytes| {
-        // SAFETY:
-        // assumes that predicate given only allows valid ascii characters which are valid UTF-8
-        // and so satisfies the safety requirements of from_utf8_unchecked.
-        unsafe { String::from_utf8_unchecked(bytes.to_vec()) }
-    })
+    let bytes = src.iter().take_while(|b| predicate(**b)).copied().collect();
+
+    // SAFETY:
+    // assumes that predicate given only allows valid ascii characters which are valid UTF-8
+    // and so satisfies the safety requirements of from_utf8_unchecked.
+    // Note: unsafe block used locally to denote unsafe part of function
+    #[allow(unused_unsafe)]
+    Some(unsafe { String::from_utf8_unchecked(bytes) })
 }
 
 /// Parse a sequence of bytes as a `pct-encoded` values or other values
