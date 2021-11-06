@@ -35,25 +35,21 @@ macro_rules! const_status_codes {
             }
 
             pub fn from_bytes(src: &[u8]) -> Result<Self, InvalidStatusCode> {
-                if src.len() != 3 {
-                    return Err(InvalidStatusCode);
+                if let [a @ b'1'..=b'9', b @ b'0'..=b'9', c @ b'0'..=b'9'] = src {
+                    let a = a.wrapping_sub(b'0') as u16;
+                    let b = b.wrapping_sub(b'0') as u16;
+                    let c = c.wrapping_sub(b'0') as u16;
+
+                    let code = (a * 100) + (b * 10) + c;
+                    match code {
+                        $(
+                            $code => return Ok(Self::$name),
+                        )*
+                        _ => {},
+                    }
                 }
 
-                let a = src[0].wrapping_sub(b'0') as u16;
-                let b = src[1].wrapping_sub(b'0') as u16;
-                let c = src[2].wrapping_sub(b'0') as u16;
-
-                if a == 0 || a > 9 || b > 9 || c > 9 {
-                    return Err(InvalidStatusCode);
-                }
-
-                let code = (a * 100) + (b * 10) + c;
-                match code {
-                    $(
-                        $code => Ok(Self::$name),
-                    )*
-                    _ => Err(InvalidStatusCode),
-                }
+                Err(InvalidStatusCode)
             }
         }
 

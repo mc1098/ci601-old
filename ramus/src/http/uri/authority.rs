@@ -4,7 +4,7 @@ use std::{
 };
 
 use crate::http::{
-    utils::{parse_hex_dig, reg_name, reg_name_ext, split_at_next, unreserved_sub_delim_ext},
+    utils::{self, split_at_next},
     StatusCode,
 };
 
@@ -84,6 +84,7 @@ impl Authority {
 ///
 /// ```text
 /// userinfo = *( unreserved / pct-encoded / sub-delims / ":" )
+///
 /// unreserved = ALPHA / DIGIT / "-" / "." / "_" / "~"
 /// pct-encoded = "%" HEXDIG HEXDIG
 /// sub-delims = "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "="
@@ -93,10 +94,17 @@ pub struct UserInfo(String);
 
 impl UserInfo {
     pub fn from_bytes(src: &[u8]) -> Result<Self, StatusCode> {
-        reg_name_ext(src, |b| b == b':')
-            .filter(|ui| ui.len() == src.len())
-            .map(Self)
-            .ok_or(StatusCode::BAD_REQUEST)
+        // SAFETY:
+        // unreserved and sub-delims and ':' are all valid ascii characters
+        // so the safety requirement of parse_pct_encoded_ext is satisfied.
+        unsafe {
+            utils::abnf::parse_pct_encoded_ext(src, |b| {
+                utils::abnf::is_unreserved(b) || utils::abnf::is_sub_delims(b) || b == b':'
+            })
+        }
+        .filter(|ui| ui.len() == src.len())
+        .map(Self)
+        .ok_or(StatusCode::BAD_REQUEST)
     }
 }
 
@@ -147,7 +155,7 @@ impl Host {
                     Ok(Host::IpvN(addr.into()))
                 } else {
                     // fall back to reg-name
-                    reg_name(src)
+                    utils::abnf::parse_reg_name(src)
                         .filter(|s| s.len() == src.len())
                         .ok_or(StatusCode::BAD_REQUEST)
                         .map(Host::RegName)
@@ -164,41 +172,20 @@ impl Host {
 /// ```
 fn ipv_future_from_bytes(src: &[u8]) -> Result<(u16, String), StatusCode> {
     if let [b'[', b'v', rest @ .., b']'] = src {
-        let (i, version) = rest
-            .iter()
-            .copied()
-            // map -> take_while -> map to conditionally parse
-            // and stop at first failure then final map to unwrap
-            // back into the u8
-            .map(parse_hex_dig)
-            .take_while(Option::is_some)
-            .map(Option::unwrap)
-            .enumerate()
-            .fold((None, Some(0u16)), |(_, acc), (i, b)| {
-                let acc = acc.and_then(|acc| (0xf000 & acc == 0).then(|| (acc << 4) + b as u16));
-
-                if acc.is_some() {
-                    (Some(i), acc)
-                } else {
-                    (None, None)
-                }
-            });
-        // MUST be one hexdig
-        // i is the current index of the last hexdig found
-        // and we are expecting a "." then atleast one other
-        // char, therefore i + 2.
-        match (i, version) {
-            (Some(i), Some(version)) if rest.len() > i => {
-                if let [_, b'.', rest @ ..] = &rest[i..] {
-                    let name = unreserved_sub_delim_ext(rest, |b| b == b':')
-                        .ok_or(StatusCode::BAD_REQUEST)?;
-                    return Ok((version, name));
-                }
+        if let Some((version, [b'.', rest @ ..])) = utils::abnf::parse_hex_u16(rest) {
+            // SAFETY:
+            // unreserved and sub-delims and ':' are valid ascii characters
+            // so the safety requirements of parse_seq are satisfied.
+            let name = unsafe {
+                utils::abnf::parse_seq(rest, |b| {
+                    utils::abnf::is_unreserved(b) || utils::abnf::is_sub_delims(b) || b == b':'
+                })
             }
-            _ => {}
+            .filter(|s| !s.is_empty())
+            .ok_or(StatusCode::BAD_REQUEST)?;
+            return Ok((version, name));
         }
     }
-    // reached the end so failed to parse from bytes correctly
     Err(StatusCode::BAD_REQUEST)
 }
 

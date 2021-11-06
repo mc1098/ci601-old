@@ -8,25 +8,16 @@ pub use request::*;
 pub use status_code::*;
 pub use uri::*;
 
-use crate::http::utils::split_at_next;
-
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Version((u8, u8));
 
 impl Version {
     pub fn from_bytes(src: &[u8]) -> Result<Self, StatusCode> {
-        let rest = if let Some((b"HTTP", rest)) = split_at_next(src, 0x2f) {
-            rest
+        if let Some([major @ b'0'..=b'9', b'.', minor @ b'0'..=b'9']) = src.strip_prefix(b"HTTP/") {
+            Ok(Version((*major, *minor)))
         } else {
-            return Err(StatusCode::BAD_REQUEST);
-        };
-
-        if let Some(([major], [minor])) = split_at_next(rest, 0x2e) {
-            if major.is_ascii_digit() && minor.is_ascii_digit() {
-                return Ok(Version((*major, *minor)));
-            }
+            Err(StatusCode::BAD_REQUEST)
         }
-        Err(StatusCode::BAD_REQUEST)
     }
 }
 

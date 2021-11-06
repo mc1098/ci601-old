@@ -7,7 +7,7 @@ pub use path::*;
 pub use scheme::*;
 
 use super::{
-    utils::{reg_name_ext, split_at_next},
+    utils::{self, split_at_next},
     StatusCode,
 };
 
@@ -129,7 +129,7 @@ pub struct Fragment(String);
 
 impl Fragment {
     pub fn from_bytes(src: &[u8]) -> Result<Self, StatusCode> {
-        reg_name_ext(src, |b| b"/?".contains(&b))
+        utils::abnf::parse_frag_or_query(src)
             .filter(|s| s.len() == src.len())
             .map(Self)
             .ok_or(StatusCode::BAD_REQUEST)
@@ -174,7 +174,7 @@ pub struct Query(String);
 
 impl Query {
     pub fn from_bytes(src: &[u8]) -> Result<Self, StatusCode> {
-        reg_name_ext(src, |b| b"/?".contains(&b))
+        utils::abnf::parse_frag_or_query(src)
             .filter(|s| s.len() == src.len())
             .map(Self)
             .ok_or(StatusCode::BAD_REQUEST)
