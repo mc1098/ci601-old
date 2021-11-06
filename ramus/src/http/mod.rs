@@ -1,4 +1,5 @@
 //! A general purpose module of common HTTP types
+mod header;
 mod method;
 mod request;
 mod status_code;
