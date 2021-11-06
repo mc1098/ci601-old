@@ -26,6 +26,10 @@ use crate::http::{utils, StatusCode};
 pub struct Path(String);
 
 impl Path {
+    /// Derive a [`Path`] from a slice of bytes.
+    ///
+    /// Returns a [`StatusCode::BAD_REQUEST`] when the slice of bytes does not match the ABNF
+    /// syntax of [`Path`].
     pub fn from_bytes(src: &[u8]) -> Result<Self, StatusCode> {
         macro_rules! parse_pchars_into {
             ($rest:expr) => {{
