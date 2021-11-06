@@ -1,5 +1,13 @@
 use super::{method::Method, utils::split_at_next_space, StatusCode, Uri, Version};
 
+/// Request Line as defined in [RFC7230 Section
+/// 3.1.1](https://datatracker.ietf.org/doc/html/rfc7230#section-3.1.1).
+///
+/// ```text
+/// request-line = method SP request-target SP HTTP-version CRLF
+/// ```
+/// For `method` see [`Method`], and for `request-target` see [`Uri`], and for `HTTP-version`
+/// see [`Version`].
 #[derive(Debug, PartialEq)]
 pub struct RequestLine {
     method: Method,
@@ -8,8 +16,15 @@ pub struct RequestLine {
 }
 
 impl RequestLine {
+    /// The maximum length of the URI accepted before a [`StatusCode::URI_TOO_LONG`] should be
+    /// returned.
     pub const URI_MAX_LENGTH: usize = 8000;
 
+    /// Derive [`RequestLine`] from a slice of bytes.
+    ///
+    /// Returns a [`StatusCode::BAD_REQUEST`] if the slice of bytes does not match the ABNF syntax.
+    /// Returns a [`StatusCode::URI_TOO_LONG`] when the `request-target` is greater than the
+    /// [`RequestLine::URI_MAX_LENGTH`].
     pub fn from_bytes(src: &[u8]) -> Result<Self, StatusCode> {
         let (method_bytes, rest) = split_at_next_space(src).ok_or(StatusCode::BAD_REQUEST)?;
         let method = Method::from_bytes(method_bytes)?;

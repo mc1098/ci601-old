@@ -25,6 +25,10 @@ pub struct Authority {
 }
 
 impl Authority {
+    /// Derive a [`Authority`] from a slice of bytes.
+    ///
+    /// Returns a [`StatusCode::BAD_REQUEST`] when the slice of bytes does not match the ABNF
+    /// syntax of [`Authority`].
     pub fn from_bytes(src: &[u8]) -> Result<Self, StatusCode> {
         let (user_info, rest) = if let Some((info_bytes, rest)) = split_at_next(src, b'@') {
             (Some(UserInfo::from_bytes(info_bytes)?), rest)
@@ -93,6 +97,10 @@ impl Authority {
 pub struct UserInfo(String);
 
 impl UserInfo {
+    /// Derive a [`UserInfo`] from a slice of bytes.
+    ///
+    /// Returns a [`StatusCode::BAD_REQUEST`] when the slice of bytes does not match the ABNF
+    /// syntax of [`UserInfo`].
     pub fn from_bytes(src: &[u8]) -> Result<Self, StatusCode> {
         // SAFETY:
         // unreserved and sub-delims and ':' are all valid ascii characters
@@ -123,12 +131,20 @@ impl UserInfo {
 /// ```
 #[derive(Clone, Debug, PartialEq)]
 pub enum Host {
+    /// Contains a [`IpAddr`] abstraction over either a IPv4address or a
+    /// IPv6address.
     IpvN(IpAddr),
+    /// Contains a IpvFuture address - the number being the version.
     IpvFuture((u16, String)),
-    RegName(String),
+    /// Domain name string of the host.
+    Domain(String),
 }
 
 impl Host {
+    /// Derive a [`Host`] from a slice of bytes.
+    ///
+    /// Returns a [`StatusCode::BAD_REQUEST`] when the slice of bytes does not match the ABNF
+    /// syntax of [`Host`].
     pub fn from_bytes(src: &[u8]) -> Result<Self, StatusCode> {
         if src.is_empty() {
             return Err(StatusCode::BAD_REQUEST);
@@ -158,7 +174,7 @@ impl Host {
                     utils::abnf::parse_reg_name(src)
                         .filter(|s| s.len() == src.len())
                         .ok_or(StatusCode::BAD_REQUEST)
-                        .map(Host::RegName)
+                        .map(Host::Domain)
                 }
             }
         }
@@ -238,7 +254,7 @@ mod authority_tests {
         assert_eq!(
             Ok(Authority {
                 user_info: None,
-                host: Host::RegName("example.com".to_owned()),
+                host: Host::Domain("example.com".to_owned()),
                 port: Some(8042)
             }),
             Authority::from_bytes(b"example.com:8042")
@@ -250,7 +266,7 @@ mod authority_tests {
         assert_eq!(
             Ok(Authority {
                 user_info: None,
-                host: Host::RegName("example.com".to_owned()),
+                host: Host::Domain("example.com".to_owned()),
                 port: Some(0),
             }),
             Authority::from_bytes(b"example.com:")
@@ -423,7 +439,7 @@ mod host_tests {
     #[test]
     fn domain_name_is_a_host() {
         assert_eq!(
-            Ok(Host::RegName("example.com".to_owned())),
+            Ok(Host::Domain("example.com".to_owned())),
             Host::from_bytes(b"example.com")
         );
     }

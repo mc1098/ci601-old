@@ -1,3 +1,4 @@
+//! Module to contain all the common URI types.
 mod authority;
 mod path;
 mod scheme;
@@ -44,6 +45,10 @@ pub struct Uri {
 }
 
 impl Uri {
+    /// Derive a [`Uri`] from a slice of bytes.
+    ///
+    /// Returns a [`StatusCode::BAD_REQUEST`] when the slice of bytes does not match the ABNF
+    /// syntax of [`Uri`].
     pub fn from_bytes(src: &[u8]) -> Result<Self, StatusCode> {
         if src.is_empty() {
             return Err(StatusCode::BAD_REQUEST);
@@ -128,6 +133,10 @@ impl Uri {
 pub struct Fragment(String);
 
 impl Fragment {
+    /// Derive a [`Fragment`] from a slice of bytes.
+    ///
+    /// Returns a [`StatusCode::BAD_REQUEST`] when the slice of bytes does not match the ABNF
+    /// syntax of [`Fragment`].
     pub fn from_bytes(src: &[u8]) -> Result<Self, StatusCode> {
         utils::abnf::parse_frag_or_query(src)
             .filter(|s| s.len() == src.len())
@@ -173,6 +182,10 @@ impl Fragment {
 pub struct Query(String);
 
 impl Query {
+    /// Derive a [`Query`] from a slice of bytes.
+    ///
+    /// Returns a [`StatusCode::BAD_REQUEST`] when the slice of bytes does not match the ABNF
+    /// syntax of [`Query`].
     pub fn from_bytes(src: &[u8]) -> Result<Self, StatusCode> {
         utils::abnf::parse_frag_or_query(src)
             .filter(|s| s.len() == src.len())

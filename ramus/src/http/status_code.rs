@@ -1,7 +1,11 @@
 use std::num::NonZeroU16;
 
-/// An HTTP Status Code representation as defined in the RFC (RFC 7231 Section
-/// 6)[https://datatracker.ietf.org/doc/html/rfc7231#section-6]
+/// An HTTP Status Code representation as listed in the RFC (RFC 7231 Section
+/// 6)[<https://datatracker.ietf.org/doc/html/rfc7231#section-6>]
+///
+/// ```text
+/// status-code = 3DIGIT
+/// ```
 #[derive(Copy, Clone, Debug, Hash, PartialEq)]
 pub struct StatusCode(NonZeroU16);
 
@@ -22,6 +26,7 @@ macro_rules! const_status_codes {
                 pub const $name: StatusCode = StatusCode(unsafe { NonZeroU16::new_unchecked($code) });
             )*
 
+            /// Returns the human readable reason phrase.
             pub const fn reason(&self) -> &'static str {
                 match self.0.get() {
                     $(
@@ -34,6 +39,10 @@ macro_rules! const_status_codes {
                 }
             }
 
+            /// Derives a [`StatusCode`] from a slice of bytes.
+            ///
+            /// Returns a `InvalidStatusCode` if the slice of bytes does not match
+            /// the ABNF syntax of [`StatusCode`].
             pub fn from_bytes(src: &[u8]) -> Result<Self, InvalidStatusCode> {
                 if let [a @ b'1'..=b'9', b @ b'0'..=b'9', c @ b'0'..=b'9'] = src {
                     let a = a.wrapping_sub(b'0') as u16;
