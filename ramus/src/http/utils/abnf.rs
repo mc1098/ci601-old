@@ -213,9 +213,85 @@ pub(crate) const fn parse_hex_dig(byte: u8) -> Option<u8> {
     Some(digit)
 }
 
+macro_rules! parse_hex_uint_impl {
+    ($($fn_name:ident => $uint:ty,)*) => {
+        $(
+            /// Parse a number of HEXDIGs into the uint type.
+            ///
+            /// This function will parse a number of octets upto the number
+            /// of nibbles in the uint type while those octets are valid HEXDIGs.
+            ///
+            /// The number of HEXDIGs parsed is variable but at least one HEXDIG
+            /// must exists in order to return a Some value.
+            #[allow(dead_code)]
+            pub(crate) fn $fn_name(src: &[u8]) -> Option<($uint, &[u8])> {
+                // We use the number of nibbles for this type so we can
+                // only take that many HEXDIGs - this guarantees that
+                // the shift left and adds in the fold cannot overflow the
+                // uint type.
+                let nibbles = <$uint>::BITS as usize / 4;
+
+                // use fold_count to count the number of iterations of the fold
+                // closure - this is easier to read then doing the same as part of the
+                // accumulating value.
+                let mut fold_count = 0;
+
+                src.iter()
+                    .take(nibbles)
+                    // map -> take_while -> map
+                    // so that we only take up to a failed parse of HEXDIG
+                    // and unwrap known Some values so the unwrap is guaranteed
+                    // to not panic!
+                    .map(|b| parse_hex_dig(*b))
+                    .take_while(Option::is_some)
+                    .map(Option::unwrap)
+                    .fold(None, |acc, hex| {
+                        fold_count += 1;
+                        Some((acc.unwrap_or_default() << 4) + hex as $uint)
+                    })
+                    .map(|hex| (hex, src.get(fold_count..).unwrap_or_default()))
+            }
+        )*
+    };
+}
+
+parse_hex_uint_impl! {
+    parse_hex_u8 => u8,
+    parse_hex_u16 => u16,
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{parse_hex_dig, parse_pct_encoded_ext, parse_reg_name};
+    use super::{
+        parse_hex_dig, parse_hex_u16, parse_hex_u8, parse_pct_encoded_ext, parse_reg_name,
+    };
+
+    #[test]
+    fn empty_slice_cannot_be_parsed_as_hex_u8() {
+        assert!(parse_hex_u8(&[]).is_none());
+    }
+
+    #[test]
+    fn invalid_hex_dig_prefix_prevents_parsing_hex() {
+        assert!(parse_hex_u8(b"@1").is_none());
+        // only capital ABCDEF is a valid HEXDIG
+        assert!(parse_hex_u8(b"a1").is_none());
+    }
+
+    #[test]
+    fn multiple_hex_digs_can_be_parsed_upto_nibble_limit_of_uint_type() {
+        // u8 has 2 nibbles
+        assert_eq!(Some((0xa, [].as_ref())), parse_hex_u8(b"A"));
+        assert_eq!(Some((0x14, [].as_ref())), parse_hex_u8(b"14"));
+        assert_eq!(Some((0xff, b"1".as_ref())), parse_hex_u8(b"FF1"));
+
+        // u16 has 4 nibbles
+        assert_eq!(Some((0xa, [].as_ref())), parse_hex_u16(b"A"));
+        assert_eq!(Some((0x14, [].as_ref())), parse_hex_u16(b"14"));
+        assert_eq!(Some((0xff1, [].as_ref())), parse_hex_u16(b"FF1"));
+        assert_eq!(Some((0xb1f8, [].as_ref())), parse_hex_u16(b"B1F8"));
+        assert_eq!(Some((0xaaff, b"A".as_ref())), parse_hex_u16(b"AAFFA"));
+    }
 
     #[test]
     fn single_percent_is_not_a_valid_pct_encoded() {

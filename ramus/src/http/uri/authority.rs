@@ -172,51 +172,20 @@ impl Host {
 /// ```
 fn ipv_future_from_bytes(src: &[u8]) -> Result<(u16, String), StatusCode> {
     if let [b'[', b'v', rest @ .., b']'] = src {
-        let (i, version) = rest
-            .iter()
-            .copied()
-            // map -> take_while -> map to conditionally parse
-            // and stop at first failure then final map to unwrap
-            // back into the u8
-            .map(utils::abnf::parse_hex_dig)
-            .take_while(Option::is_some)
-            .map(Option::unwrap)
-            .enumerate()
-            .fold((None, Some(0u16)), |(_, acc), (i, b)| {
-                let acc = acc.and_then(|acc| (0xf000 & acc == 0).then(|| (acc << 4) + b as u16));
-
-                if acc.is_some() {
-                    (Some(i), acc)
-                } else {
-                    (None, None)
-                }
-            });
-        // MUST be one hexdig
-        // i is the current index of the last hexdig found
-        // and we are expecting a "." then atleast one other
-        // char, therefore i + 2.
-        match (i, version) {
-            (Some(i), Some(version)) if rest.len() > i => {
-                if let [_, b'.', rest @ ..] = &rest[i..] {
-                    // SAFETY:
-                    // unreserved and sub-delims and ':' are valid ascii characters
-                    // so the safety requirements of parse_seq are satisfied.
-                    let name = unsafe {
-                        utils::abnf::parse_seq(rest, |b| {
-                            utils::abnf::is_unreserved(b)
-                                || utils::abnf::is_sub_delims(b)
-                                || b == b':'
-                        })
-                    }
-                    .filter(|s| !s.is_empty())
-                    .ok_or(StatusCode::BAD_REQUEST)?;
-                    return Ok((version, name));
-                }
+        if let Some((version, [b'.', rest @ ..])) = utils::abnf::parse_hex_u16(rest) {
+            // SAFETY:
+            // unreserved and sub-delims and ':' are valid ascii characters
+            // so the safety requirements of parse_seq are satisfied.
+            let name = unsafe {
+                utils::abnf::parse_seq(rest, |b| {
+                    utils::abnf::is_unreserved(b) || utils::abnf::is_sub_delims(b) || b == b':'
+                })
             }
-            _ => {}
+            .filter(|s| !s.is_empty())
+            .ok_or(StatusCode::BAD_REQUEST)?;
+            return Ok((version, name));
         }
     }
-    // reached the end so failed to parse from bytes correctly
     Err(StatusCode::BAD_REQUEST)
 }
 
