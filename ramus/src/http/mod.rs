@@ -6,6 +6,7 @@ mod status_code;
 mod uri;
 pub(crate) mod utils;
 
+pub use header::*;
 pub use method::*;
 pub use request::*;
 pub use status_code::*;

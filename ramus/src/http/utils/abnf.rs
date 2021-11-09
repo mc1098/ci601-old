@@ -47,6 +47,33 @@ pub(crate) const fn is_sub_delims(byte: u8) -> bool {
     )
 }
 
+/// Checks if the value is a 'tchar' ABNF as defined in [RFC7230 Appendix
+/// B](https://datatracker.ietf.org/doc/html/rfc7230#appendix-B)
+///
+/// ```text
+/// tchar = "!" / "#" / "$" / "%" / "&" / "'" / "*" / "+" / "-" / "." / "^" / "_" / "`" / "|" / "~"
+/// ```
+pub(crate) fn is_tchar(byte: u8) -> bool {
+    byte.is_ascii_alphanumeric()
+        || matches!(
+            byte,
+            b'!' | b'#'
+                | b'$'
+                | b'%'
+                | b'&'
+                | b'\''
+                | b'*'
+                | b'+'
+                | b'-'
+                | b'.'
+                | b'^'
+                | b'_'
+                | b'`'
+                | b'|'
+                | b'~'
+        )
+}
+
 /// Checks that the sequence of octets is a valid reg-name as defined in
 /// [RFC3986 Section 3.2.2](https://datatracker.ietf.org/doc/html/rfc3986#section-3.2.2)
 ///
