@@ -13,7 +13,7 @@ pub enum HeaderFieldName {
     /// Represents static [`RegisteredFieldName`] values for known field names
     ///
     /// These are static as const instances can be found in the [`HeaderFieldName`] type.
-    Static(RegisteredFieldName),
+    Registered(StaticFieldName),
     /// Represents unknown custom field names.
     Custom(String),
 }
@@ -28,7 +28,7 @@ macro_rules! standard_field_name_impl {
         /// Name Registry](https://www.iana.org/assignments/http-fields/http-fields.xhtml#field-names).
         #[derive(Debug, Hash, PartialEq)]
         #[non_exhaustive]
-        pub enum RegisteredFieldName {
+        pub enum StaticFieldName {
             $(
                 $(#[$var_doc])+
                 #[allow(non_camel_case_types)]
@@ -42,7 +42,9 @@ macro_rules! standard_field_name_impl {
             $(
                 $(#[$var_doc])+
                 #[allow(non_camel_case_types)]
-                pub const $static_ident: HeaderFieldName = HeaderFieldName::Static(RegisteredFieldName::$variant);
+                pub const $static_ident: HeaderFieldName = HeaderFieldName::Registered(
+                    StaticFieldName::$variant
+                );
             )*
 
             /// Derive a [`HeaderFieldName`] from a slice of bytes.
@@ -71,7 +73,7 @@ macro_rules! standard_field_name_impl {
             pub fn as_str(&self) -> &str {
                 match self {
                     $(
-                        HeaderFieldName::Static(RegisteredFieldName::$variant) => $name,
+                        HeaderFieldName::Registered(StaticFieldName::$variant) => $name,
                     )*
                     HeaderFieldName::Custom(s) => s.as_ref(),
                 }

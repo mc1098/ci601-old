@@ -1,12 +1,11 @@
 //! A general purpose module of common HTTP types
-mod header;
+pub mod header;
 mod method;
 mod request;
 mod status_code;
 mod uri;
 pub(crate) mod utils;
 
-pub use header::*;
 pub use method::*;
 pub use request::*;
 pub use status_code::*;
