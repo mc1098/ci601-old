@@ -37,3 +37,9 @@ impl HeaderFieldValue {
         std::str::from_utf8(&self.0)
     }
 }
+
+impl From<&str> for HeaderFieldValue {
+    fn from(s: &str) -> Self {
+        Self(s.as_bytes().to_vec())
+    }
+}

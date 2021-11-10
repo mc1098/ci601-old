@@ -8,7 +8,7 @@ use crate::http::{utils, StatusCode};
 ///
 /// token = 1*pchar
 /// ```
-#[derive(Debug, Hash, PartialEq)]
+#[derive(Debug, Eq, Hash, PartialEq)]
 pub enum HeaderFieldName {
     /// Represents static [`RegisteredFieldName`] values for known field names
     ///
@@ -26,7 +26,7 @@ macro_rules! standard_field_name_impl {
 
         /// Represents known registered field names as per the [Hypertext Transfer Protocol (HTTP) Field
         /// Name Registry](https://www.iana.org/assignments/http-fields/http-fields.xhtml#field-names).
-        #[derive(Debug, Hash, PartialEq)]
+        #[derive(Debug, Eq, Hash, PartialEq)]
         #[non_exhaustive]
         pub enum StaticFieldName {
             $(
@@ -52,7 +52,7 @@ macro_rules! standard_field_name_impl {
             /// Returns a [`StatusCode::BAD_REQUEST`] when the slice of bytes does not match the ABNF
             /// syntax of [`HeaderFieldName`].
             pub fn from_bytes(src: &[u8]) -> Result<Self, StatusCode> {
-                if src.is_empty() && !src.iter().all(|b| utils::abnf::is_tchar(*b)) {
+                if src.is_empty() || !src.iter().copied().all(utils::abnf::is_tchar) {
                     return Err(StatusCode::BAD_REQUEST);
                 }
 

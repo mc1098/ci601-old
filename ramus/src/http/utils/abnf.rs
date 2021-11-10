@@ -1,6 +1,29 @@
 /// Crate Module:
 /// Module that contains functions relating to parsing or validating of ABNF syntax types.
 
+/// Returns a slice with leading and trailing OWS removed.
+///
+/// OWS is defined in [RFC7230 Section
+/// 3.2.3](https://datatracker.ietf.org/doc/html/rfc7230#section-3.2.3).
+///
+/// ```text
+/// OWS = *( SP / HTAB )
+/// ```
+pub(crate) fn trim_ows(src: &[u8]) -> &[u8] {
+    fn number_of_ows(iter: impl Iterator<Item = u8>) -> usize {
+        iter.take_while(|b| matches!(b, b' ' | b'\t')).count()
+    }
+
+    let mut iter = src.iter().copied();
+
+    let start = number_of_ows(iter.by_ref());
+    let end = src.len() - number_of_ows(iter.rev());
+
+    // if src only contains ows then this slice range
+    // won't panic and will return an empty slice as expected.
+    &src[start..end]
+}
+
 /// Checks if the value is a `unreserved` ABNF as defined in
 /// [RFC3986](https://datatracker.ietf.org/doc/html/rfc3986)
 ///
@@ -289,9 +312,34 @@ parse_hex_uint_impl! {
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        parse_hex_dig, parse_hex_u16, parse_hex_u8, parse_pct_encoded_ext, parse_reg_name,
-    };
+    use super::*;
+
+    #[test]
+    fn trim_empty_slice_is_an_empty_slice() {
+        assert_eq!(&[] as &[u8; 0], trim_ows(&[]));
+    }
+
+    #[test]
+    fn trim_slice_with_only_ows_returns_empty_slice() {
+        assert_eq!(&[] as &[u8; 0], trim_ows(b" \t\t   \t"))
+    }
+
+    #[test]
+    fn trim_only_removes_ows_from_prefix_and_suffix() {
+        // trim_ows should effectively be an identity function when no ows is in
+        // the prefix or suffix.
+        assert_eq!(b"Hello, world", trim_ows(b"Hello, world"));
+    }
+
+    #[test]
+    fn ows_prefix_and_suffix_removed() {
+        // prefix only
+        assert_eq!(b"custard", trim_ows(b"\t custard"));
+        // suffix only
+        assert_eq!(b"custard", trim_ows(b"custard  \t"));
+        // prefix & suffix
+        assert_eq!(b"custard", trim_ows(b"\t custard  \t\t "));
+    }
 
     #[test]
     fn empty_slice_cannot_be_parsed_as_hex_u8() {
