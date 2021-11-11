@@ -10,6 +10,46 @@
   url = {https://discord.com/blog/why-discord-is-switching-from-go-to-rust},
 }
 
+@online{knoldus-concurrency-in-rust,
+  author = {Aman Verma - Knoldus},
+  title = {Concurrency in Rust is indeed fearless},
+  year = 2021,
+  month = aug,
+  url = {https://blog.knoldus.com/concurrency-in-rust-is-indeed-fearless/},
+}
+
+@online{rust-the-book,
+  author = {Steve Klabnik and Carol Nichols},
+  title = {The Rust Programming Language ("The Book")},
+  year = 2021,
+  month = feb,
+  url = {https://doc.rust-lang.org/book/title-page.html},
+}
+
+@online{microsoft-memory-safety,
+  author = {Catalin Cimpanu},
+  title = {Microsoft: 70 percent of all security bugs are memory safety issues},
+  year = 2019,
+  month = feb,
+  url = {https://www.zdnet.com/article/microsoft-70-percent-of-all-security-bugs-are-memory-safety-issues/},
+}
+
+@online{linux-memory-safety,
+  author = {{KernelCare Team}},
+  title = {A Guide to Memory Vulnerabilities in the Linux Kernal},
+  year = 2020,
+  month = oct,
+  url = {https://blog.kernelcare.com/vulnerability/a-guide-to-memory-vulnerabilities-in-the-linux-kernel},
+}
+
+@online{so-most-loved-lang-2021,
+  author = {StackOverflow},
+  title = {2021 Developer Survey: Most loved, dreaded, and wanted},
+  year = 2021,
+  month = may,
+  url = {https://insights.stackoverflow.com/survey/2021/#technology-most-loved-dreaded-and-wanted},
+}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Books %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -20,6 +60,15 @@
   isbn = {978-0-201-62432-8},
   year = 1994,
   publisher = {Addison-Wesley},
+}
+
+@book{cone-of-uncertainty,
+  author = {Steve McConnell},
+  title = {Software project surival guide},
+  publisher = {Microsoft Press},
+  year = {1998},
+  address = {Redmond, Wash},
+  isbn = {978-1572316218},
 }
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -123,6 +172,28 @@
     and value ranges. This specification also supplies additional rule definitions and encoding for
     a core lexical analyzer of the type common to several Internet specifications.
     {[}STANDARDS-TRACK{]}}
+}
+
+@misc{rfc5952,
+  series = {Request for Comments},
+  number = 5952,
+  howpublished = {RFC 5952},
+  publisher = {RFC Editor},
+  doi = {10.17487/RFC5952},
+  url = {https://rfc-editor.org/rfc/rfc5952.txt},
+  author = {Seiichi Kawamura and Masanobu Kawashima},
+  title = {{A Recommendation for IPv6 Address Text Representation}},
+  pagetotal = 14,
+  year = 2010,
+  month = aug,
+  abstract = {As IPv6 deployment increases, there will be a dramatic increase in the need to use
+    IPv6 addresses in text. While the IPv6 address architecture in Section 2.2 of RFC 4291
+    describes a flexible model for text representation of an IPv6 address, this flexibility has
+    been causing problems for operators, system engineers, and users. This document defines a
+    canonical textual representation format. It does not define a format for internal storage,
+    such as within an application or database. It is expected that the canonical format will be
+    followed by humans and systems when representing IPv6 addresses as text, but all implementations
+    must accept and be able to handle any legitimate RFC 4291 format. {[}STANDARDS-TRACK{]}},
 }
 
 @misc{rfc7230,
@@ -234,3 +305,33 @@
     Authentication framework.},
 }
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Papers %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+@online{rust-npm-paper,
+  author = {{The Rust Project Developers}},
+  title = {Community makes Rust an easy choice for npm},
+  year = 2019,
+  month = feb,
+  url = {https://www.rust-lang.org/static/pdfs/Rust-npm-Whitepaper.pdf},
+}
+
+@article{ghostcell,
+  author = {Joshua Yanovski and Hoang-Hai Dang and Ralf Jung and Derek Dreyer},
+  title = {GhostCell: Separating Permissions from Data in Rust},
+  year = 2021,
+  month = aug,
+  url = {https://dl.acm.org/doi/10.1145/3473597},
+}
+
+@article{dblp-perfomance-vs-effort-rust-c,
+  author = {Manuel Costanzo and Marcelo R. Naiouf and Armando De Giusti},
+  title = {Performance vs Programming Effort between Rust and {C} on Multicore Architectures:
+    Case Study in N-Body},
+  journal = {CoRR},
+  volume = {abs/2107.11912},
+  year = {2021},
+  url = {https://arxiv.org/abs/2107.11912},
+  eprint = {2107.11912},
+}
